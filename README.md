@@ -7,7 +7,8 @@ Aplicativo mobile desenvolvido em React Native com Expo para gerenciamento e aco
 ## 👥 Autoria
 Projeto desenvolvido para fins acadêmicos na disciplina de Programação para Dispositivos Móveis.
 * **Gabriel Candido** - Matrícula: 24214290023
-* **Mateus Cantanhêde da Cruz** - Matrícula: 24214290038
+* **Mateus Cantanhêde** - Matrícula: 24214290038
+* **Matheus Henrique** - Matrícula: 24214290029
 
 ---
 

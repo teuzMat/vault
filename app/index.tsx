@@ -1,20 +1,15 @@
 import { StyleSheet, Text, View, Image, Platform, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { useRouter } from 'expo-router';
 
 export default function LoginScreen() {
-  // Verificação para aplicar a Regra 20-60-20 no navegador
   const isWeb = Platform.OS === 'web';
+  const router = useRouter(); // Instância do roteador ativada
 
   return (
     <View style={styles.background}>
-      {/* 
-        Este é o Container de Conteúdo. 
-        No Mobile ele tem 100% de largura.
-        Na Web ele tem 60% de largura (deixando 20% de sobra de cada lado) 
-      */}
       <View style={[styles.contentContainer, isWeb && styles.webContainer]}>
         
-        {/* Logo do Vault.gg inserida com sucesso */}
         <Image 
           source={require('../assets/images/logo.png')} 
           style={styles.logoImage}
@@ -24,7 +19,6 @@ export default function LoginScreen() {
         <Text style={styles.title}>Vault.gg</Text>
         <Text style={styles.subtitle}>Sua biblioteca gamer definitiva.</Text>
 
-        {/* Área de Botões de Acesso */}
         <View style={styles.formContainer}>
           
           <TouchableOpacity style={styles.primaryButton}>
@@ -39,7 +33,6 @@ export default function LoginScreen() {
 
           <View style={styles.socialContainer}>
             <TouchableOpacity style={styles.socialButton}>
-              {/* O ideal depois é colocarmos os ícones aqui com @expo/vector-icons */}
               <Text style={styles.socialButtonText}>Google</Text>
             </TouchableOpacity>
 
@@ -50,12 +43,18 @@ export default function LoginScreen() {
 
         </View>
 
-        {/* Opção de Cadastro */}
-        <TouchableOpacity style={styles.registerLink}>
+        {/* Evento onPress adicionado para disparar a troca de tela */}
+        <TouchableOpacity style={styles.registerLink} onPress={() => router.push('/cadastro')}>
           <Text style={styles.registerText}>
             Ainda não é um membro? <Text style={styles.registerTextBold}>Cadastre-se</Text>
           </Text>
         </TouchableOpacity>
+        
+        <View style={styles.authorsContainer}>
+          <Text style={styles.authorsText}>Desenvolvido por:</Text>
+          <Text style={styles.authorsNames}>Mateus Cantanhêde (24214290038)</Text>
+          <Text style={styles.authorsNames}>Gabriel Candido (24214290023)</Text>
+        </View>
 
       </View>
       <StatusBar style="light" />
@@ -67,7 +66,7 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     backgroundColor: '#0B0F19',
-    alignItems: 'center', // Garante que o container central fique no meio
+    alignItems: 'center',
   },
   contentContainer: {
     flex: 1,
@@ -77,7 +76,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   webContainer: {
-    width: '60%', // Regra 20-60-20 aplicada!
+    width: '60%',
   },
   logoImage: {
     width: 120,
@@ -91,14 +90,14 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   subtitle: {
-    color: '#A78BFA', // Roxo secundário
+    color: '#A78BFA',
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 40,
   },
   formContainer: {
     width: '100%',
-    maxWidth: 400, // Limita o formulário para não ficar gigante mesmo dentro dos 60%
+    maxWidth: 400,
     alignItems: 'center',
   },
   primaryButton: {
@@ -164,5 +163,21 @@ const styles = StyleSheet.create({
   registerTextBold: {
     color: '#A855F7',
     fontWeight: 'bold',
+  },
+  // Estilos de autoria incluídos
+  authorsContainer: {
+    marginTop: 50,
+    alignItems: 'center',
+  },
+  authorsText: {
+    color: '#6B7280',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  authorsNames: {
+    color: '#9CA3AF',
+    fontSize: 11,
+    fontWeight: '400',
   }
 });

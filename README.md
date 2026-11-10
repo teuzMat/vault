@@ -19,6 +19,8 @@ O projeto encontra-se na etapa inicial de estruturação de arquitetura e interf
 * **Identidade Visual (Dark Mode Premium):** Aplicação de paleta de cores focada em fundos escuros (`#0B0F19`) e destaques em Roxo Neon (`#7C3AED`), garantindo uma estética *gamer* imersiva.
 * **Responsividade Híbrida (Regra 20-60-20):** Implementação de lógica via `Platform.OS` garantindo que, em dispositivos Web, o conteúdo seja centralizado ocupando 60% da tela (com 20% de margem em cada lado), enquanto no Mobile ocupa 100%.
 * **Interface de Login (`index.tsx`):** Tela de boas-vindas contendo a logo do projeto, botões para acesso via E-mail/Senha, botões de provedores externos (Google, GitHub), link para cadastro e rodapé de autoria.
+* **Interface de Cadastro (`cadastro.tsx`):** Formulário inicial estruturado com suporte a rolagem (`ScrollView`) e navegação de retorno programática (`router.back()`).
+* **Workflow:** Resolução de conflitos de dependência React/React-DOM para suporte Web (`--legacy-peer-deps`) e versionamento seguindo estritamente o padrão **Git Flow** (branches `main`, `develop` e `feature/*`).
 
 ---
 

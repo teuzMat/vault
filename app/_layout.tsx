@@ -1,57 +1,67 @@
-// app/_layout.tsx
-import React, { useEffect } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { View, ActivityIndicator } from 'react-native';
-import { AuthProvider, useAuth } from '../src/context/AuthContext';
+import React from 'react';
+import { Tabs } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { Platform } from 'react-native';
 
-function InitialLayout() {
-  const { user, loading } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (loading) return;
-
-    // Verifica se a rota atual está dentro da navegação privada (tabs)
-    const inAuthGroup = segments[0] === '(tabs)';
-
-    if (!user && inAuthGroup) {
-      // Se não houver usuário logado e tentar acessar área privada, envia para o Login
-      router.replace('/');
-    } else if (user && !inAuthGroup) {
-      // Se já estiver logado e tentar ver Login/Cadastro, envia para as Tabs
-      router.replace('/(tabs)');
+export default function TabsLayout() {
+  const handleTabPress = () => {
+    if (Platform.OS === 'ios' || Platform.OS === 'android') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-  }, [user, loading, segments]);
-
-  // Exibe a tela de splash/loading no tema Dark Mode durante o check inicial do Firebase
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0B0F19' }}>
-        <ActivityIndicator size="large" color="#7C3AED" />
-      </View>
-    );
-  }
+  };
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="cadastro" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
-  );
-}
-
-export default function RootLayout() {
-  return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <InitialLayout />
-        {/* Força a barra de status a ficar com texto/ícones claros para o Dark Mode */}
-        <StatusBar style="light" />
-      </AuthProvider>
-    </SafeAreaProvider>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#151A27',
+          borderTopColor: '#0B0F19',
+          height: Platform.OS === 'ios' ? 85 : 65,
+          paddingBottom: Platform.OS === 'ios' ? 25 : 10,
+          paddingTop: 10,
+        },
+        tabBarActiveTintColor: '#7C3AED',
+        tabBarInactiveTintColor: '#64748B',
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Explorar',
+          tabBarIcon: (props: any) => (
+            <Ionicons name="compass" size={props.size} color={props.color} />
+          ),
+        }}
+        listeners={{
+          tabPress: handleTabPress,
+        }}
+      />
+      <Tabs.Screen
+        name="biblioteca"
+        options={{
+          title: 'Minha Biblioteca',
+          tabBarIcon: (props: any) => (
+            <Ionicons name="game-controller" size={props.size} color={props.color} />
+          ),
+        }}
+        listeners={{
+          tabPress: handleTabPress,
+        }}
+      />
+      <Tabs.Screen
+        name="perfil"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: (props: any) => (
+            <Ionicons name="person" size={props.size} color={props.color} />
+          ),
+        }}
+        listeners={{
+          tabPress: handleTabPress,
+        }}
+      />
+    </Tabs>
   );
 }

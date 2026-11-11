@@ -20,7 +20,7 @@ export default function LoginScreen() {
         <Text style={styles.subtitle}>Sua biblioteca gamer definitiva.</Text>
 
         <View style={styles.formContainer}>
-          <TouchableOpacity style={styles.primaryButton}>
+          <TouchableOpacity style={styles.primaryButton} onPress={() => router.replace('../(tabs)')}>
             <Text style={styles.primaryButtonText}>Entrar com e-mail e senha</Text>
           </TouchableOpacity>
 
@@ -47,12 +47,11 @@ export default function LoginScreen() {
           </Text>
         </TouchableOpacity>
         
-        {/* Rodapé de Autoria Atualizado (Trio) */}
         <View style={styles.authorsContainer}>
           <Text style={styles.authorsText}>Desenvolvido por:</Text>
-          <Text style={styles.authorsNames}>Mateus Cantanhêde (24214290038)</Text>
           <Text style={styles.authorsNames}>Gabriel Candido (24214290023)</Text>
-          <Text style={styles.authorsNames}>Matheus Henrique</Text>
+          <Text style={styles.authorsNames}>Mateus Cantanhêde (24214290038)</Text>
+          <Text style={styles.authorsNames}>Matheus Henrique (24214290029)</Text>
         </View>
 
       </View>

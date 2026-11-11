@@ -119,7 +119,7 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Senha (Forte)</Text>
+              <Text style={styles.label}>Senha</Text>
               <TextInput style={styles.input} placeholder="Digite sua senha" placeholderTextColor="#6B7280" secureTextEntry value={senha} onChangeText={setSenha}/>
             </View>
 

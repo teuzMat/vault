@@ -6,29 +6,32 @@ Aplicativo mobile desenvolvido em React Native com Expo para gerenciamento e aco
 
 ## 👥 Autoria
 Projeto desenvolvido para fins acadêmicos na disciplina de Programação para Dispositivos Móveis.
-* **Gabriel Candido** - Matrícula: 24214290023
-* **Mateus Cantanhêde** - Matrícula: 24214290038
-* **Matheus Henrique** - Matrícula: 24214290029
+- **Gabriel Candido** - Matrícula: 24214290023
+- **Mateus Cantanhêde** - Matrícula: 24214290038
+- **Matheus Henrique** - Matrícula: 24214290029
 
 ---
 
-## 🚀 Status Atual do Projeto (Fase de Setup), v. Alpha 0.1.0
-O projeto encontra-se na etapa inicial de estruturação de arquitetura e interface gráfica. Até o momento, foram implementados:
+## 🚀 Status Atual do Projeto (Fase de Front-end e API), v. Alpha 0.2.0
+O projeto superou a fase de setup estrutural e agora possui toda a navegação, interfaces principais e consumo de dados reais. Foram implementados:
 
-* **Arquitetura Base e Roteamento:** Projeto inicializado limpo (`blank-typescript`), migrado com sucesso para o **Expo Router** para navegação baseada em arquivos (`app/`).
-* **Identidade Visual (Dark Mode Premium):** Aplicação de paleta de cores focada em fundos escuros (`#0B0F19`) e destaques em Roxo Neon (`#7C3AED`), garantindo uma estética *gamer* imersiva.
-* **Responsividade Híbrida (Regra 20-60-20):** Implementação de lógica via `Platform.OS` garantindo que, em dispositivos Web, o conteúdo seja centralizado ocupando 60% da tela (com 20% de margem em cada lado), enquanto no Mobile ocupa 100%.
-* **Interface de Login (`index.tsx`):** Tela de boas-vindas contendo a logo do projeto, botões para acesso via E-mail/Senha, botões de provedores externos (Google, GitHub), link para cadastro e rodapé de autoria.
-* **Interface de Cadastro (`cadastro.tsx`):** Formulário inicial estruturado com suporte a rolagem (`ScrollView`) e navegação de retorno programática (`router.back()`).
-* **Workflow:** Resolução de conflitos de dependência React/React-DOM para suporte Web (`--legacy-peer-deps`) e versionamento seguindo estritamente o padrão **Git Flow** (branches `main`, `develop` e `feature/*`).
+- **Arquitetura Base e Roteamento:** Migração concluída para **Expo Router** (`app/`).
+- **Navegação Interna (Bottom Tabs):** Estrutura de rotas dividida em abas (Explorar, Biblioteca, Perfil) com bloqueio de retorno para a tela de Login via `router.replace()`.
+- **Identidade Visual (Dark Mode Premium):** Aplicação de paleta focada em fundos escuros (`#0B0F19`), painéis (`#151A27`) e destaques em Roxo Neon (`#7C3AED`). Responsividade Híbrida mantida (Regra 20-60-20 na Web).
+- **Validação Nativa de Cadastro:** Formulário com Regex para força de senha (maiúsculas, minúsculas, números e símbolos), máscaras em tempo real para Data de Nascimento e **Validação Matemática Real de CPF**.
+- **Integração IGDB API (Twitch):** A tela "Explorar" realiza autenticação via servidor e consome o catálogo global de jogos da IGDB via *APICalypse*, trazendo os títulos mais aclamados e permitindo busca em tempo real.
+- **Mock de Biblioteca e Perfil:** Interfaces prontas aguardando o Backend. A Biblioteca já conta com barra de progresso gamificada, tags de status (Platinado, Jogando, Desejos) e plataformas. O Perfil exibe as estatísticas do jogador.
+- **Workflow:** Resolução de conflitos de dependência React/React-DOM para suporte Web (`--legacy-peer-deps`) e versionamento seguindo estritamente o padrão **Git Flow** (branches `main`, `develop` e `feature/*`).
 
 ---
 
 ## 🛠️ Tecnologias e Bibliotecas Utilizadas até o momento
-* React Native & Expo
-* Expo Router (Navegação)
-* TypeScript
-* React Native Safe Area Context & Screens
+- React Native & Expo
+- Expo Router (Navegação baseada em arquivos)
+- TypeScript
+- API Externa: **IGDB (Twitch)**
+- Ícones Vetoriais: `@expo/vector-icons`
+- React Native Safe Area Context & Screens
 
 ---
 

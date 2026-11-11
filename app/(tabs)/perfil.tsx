@@ -1,69 +1,94 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Platform, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Platform, ScrollView, ActivityIndicator, Modal, TextInput } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 
 // Firebase
-import { auth, db } from '../../firebase/firebaseConfig';
+import { auth, db, storage } from '../../firebase/firebaseConfig';
 import { signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-
-// Mock das Últimas Conquistas
-const ultimasConquistas = [
-  { id: '1', nome: 'Elden Ring', conquista: 'Senhor de Elden', capa: 'https://media.rawg.io/media/games/5ec/5ecac5cb026ec26a56ef04ab7cb5e006.jpg' },
-  { id: '2', nome: 'Hollow Knight', conquista: 'Puro Osso', capa: 'https://media.rawg.io/media/games/4cf/4cfc6b7f185077b414276b4bc38d8af0.jpg' },
-  { id: '3', nome: 'Cyberpunk 2077', conquista: 'A Cidade dos Sonhos', capa: 'https://media.rawg.io/media/games/26d/26d440e0abf48733221b6a7dc1ff2853.jpg' }
-];
+import { doc, getDoc, updateDoc, collection, onSnapshot, query } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export default function PerfilScreen() {
   const isWeb = Platform.OS === 'web';
   const router = useRouter();
 
-  // Estados com dados do usuário
   const [nome, setNome] = useState('Carregando...');
   const [username, setUsername] = useState('@vaulter');
   const [membroDesde, setMembroDesde] = useState('Vaulter desde...');
-  const [fotoPerfil, setFotoPerfil] = useState('https://ui-avatars.com/api/?name=V&background=7C3AED&color=fff&size=200');
+  const [fotoPerfil, setFotoPerfil] = useState('');
   
+  // Estados para exibição
   const [pais, setPais] = useState('Não informado');
   const [plataformas, setPlataformas] = useState('Nenhuma selecionada');
   
+  // Estados do Modal de Edição
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editPais, setEditPais] = useState('');
+  const [editPlataformas, setEditPlataformas] = useState('');
+  const [salvandoPerfil, setSalvandoPerfil] = useState(false);
+  
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+
+  // Estatísticas Reais
+  const [totalJogos, setTotalJogos] = useState(0);
+  const [totalPlatinas, setTotalPlatinas] = useState(0);
+  const [ultimasConquistas, setUltimasConquistas] = useState<any[]>([]);
 
   useEffect(() => {
-    const buscarDadosDoUsuario = async () => {
-      const usuarioLogado = auth.currentUser;
-      
-      if (usuarioLogado) {
-        setUsername(`@${usuarioLogado.email?.split('@')[0]}`);
+    const usuarioLogado = auth.currentUser;
+    if (!usuarioLogado) {
+      router.replace('/');
+      return;
+    }
+
+    setUsername(`@${usuarioLogado.email?.split('@')[0]}`);
         
-        try {
-          const docRef = doc(db, "usuarios", usuarioLogado.uid);
-          const docSnap = await getDoc(docRef);
+    const buscarUsuario = async () => {
+      try {
+        const docSnap = await getDoc(doc(db, "usuarios", usuarioLogado.uid));
+        if (docSnap.exists()) {
+          const dados = docSnap.data();
+          setNome(dados.nome);
+          setFotoPerfil(dados.fotoPerfil || `https://ui-avatars.com/api/?name=${encodeURIComponent(dados.nome)}&background=7C3AED&color=fff&size=200`);
           
-          if (docSnap.exists()) {
-            const dados = docSnap.data();
-            setNome(dados.nome);
-            setFotoPerfil(`https://ui-avatars.com/api/?name=${encodeURIComponent(dados.nome)}&background=7C3AED&color=fff&size=200`);
-            
-            if (dados.criadoEm) {
-              const dataCriacao = new Date(dados.criadoEm);
-              const mes = dataCriacao.toLocaleString('pt-BR', { month: 'long' });
-              const ano = dataCriacao.getFullYear();
-              setMembroDesde(`Vaulter desde ${mes} de ${ano}`);
-            }
+          // Puxa o país e plataformas se já existirem no banco
+          if (dados.pais) setPais(dados.pais);
+          if (dados.plataformas) setPlataformas(dados.plataformas);
+          
+          if (dados.criadoEm) {
+            const dataCriacao = new Date(dados.criadoEm);
+            setMembroDesde(`Vaulter desde ${dataCriacao.toLocaleString('pt-BR', { month: 'long' })} de ${dataCriacao.getFullYear()}`);
           }
-        } catch (error) {
-          console.error("Erro ao buscar dados do Firestore:", error);
         }
-      } else {
-        router.replace('/');
+      } catch (error) {
+        console.error("Erro:", error);
       }
       setLoading(false);
     };
 
-    buscarDadosDoUsuario();
+    const q = query(collection(db, "usuarios", usuarioLogado.uid, "jogos"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      let qtdJogos = 0;
+      let qtdPlatinas = 0;
+      const ultimos: any[] = [];
+      
+      snapshot.forEach((doc) => {
+        const jogo = doc.data();
+        qtdJogos++;
+        if (jogo.status === 'Platinado') qtdPlatinas++;
+        if (ultimos.length < 3 && jogo.status !== 'Desejos') ultimos.push(jogo); 
+      });
+
+      setTotalJogos(qtdJogos);
+      setTotalPlatinas(qtdPlatinas);
+      setUltimasConquistas(ultimos);
+    });
+
+    buscarUsuario();
+    return () => unsubscribe();
   }, []);
 
   const handleMudarFoto = async () => {
@@ -71,11 +96,59 @@ export default function PerfilScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1,
+      quality: 0.5,
     });
 
-    if (!result.canceled) {
-      setFotoPerfil(result.assets[0].uri);
+    if (!result.canceled && auth.currentUser) {
+      setUploading(true);
+      try {
+        const uri = result.assets[0].uri;
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        
+        const storageRef = ref(storage, `avatars/${auth.currentUser.uid}`);
+        await uploadBytes(storageRef, blob);
+        
+        const downloadURL = await getDownloadURL(storageRef);
+        
+        await updateDoc(doc(db, "usuarios", auth.currentUser.uid), {
+          fotoPerfil: downloadURL
+        });
+        
+        setFotoPerfil(downloadURL);
+      } catch (error) {
+        console.error("Erro ao subir foto:", error);
+        alert("Falha ao salvar a imagem.");
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+
+  const abrirModalEdicao = () => {
+    setEditPais(pais !== 'Não informado' ? pais : '');
+    setEditPlataformas(plataformas !== 'Nenhuma selecionada' ? plataformas : '');
+    setModalVisible(true);
+  };
+
+  const handleSalvarPerfil = async () => {
+    if (!auth.currentUser) return;
+    setSalvandoPerfil(true);
+
+    try {
+      await updateDoc(doc(db, "usuarios", auth.currentUser.uid), {
+        pais: editPais || 'Não informado',
+        plataformas: editPlataformas || 'Nenhuma selecionada'
+      });
+      
+      setPais(editPais || 'Não informado');
+      setPlataformas(editPlataformas || 'Nenhuma selecionada');
+      setModalVisible(false);
+    } catch (error) {
+      console.error("Erro ao atualizar perfil:", error);
+      alert("Erro ao salvar os dados.");
+    } finally {
+      setSalvandoPerfil(false);
     }
   };
 
@@ -88,27 +161,19 @@ export default function PerfilScreen() {
     }
   };
 
-  if (loading) {
-    return (
-      <View style={[styles.background, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator color="#7C3AED" size="large" />
-      </View>
-    );
-  }
+  if (loading) return <View style={[styles.background, { justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator color="#7C3AED" size="large" /></View>;
 
   return (
     <View style={styles.background}>
       <ScrollView contentContainerStyle={[styles.contentContainer, isWeb && styles.webContainer]} showsVerticalScrollIndicator={false}>
         
-        {/* Cabeçalho do Perfil na Esquerda */}
         <View style={styles.headerRow}>
           <View style={styles.fotoContainer}>
             <Image source={{ uri: fotoPerfil }} style={styles.foto} />
-            <TouchableOpacity onPress={handleMudarFoto} style={styles.botaoMudarFoto}>
-              <MaterialCommunityIcons color="#FFFFFF" name="camera" size={16} />
+            <TouchableOpacity onPress={handleMudarFoto} style={styles.botaoMudarFoto} disabled={uploading}>
+              {uploading ? <ActivityIndicator size="small" color="#FFFFFF" /> : <MaterialCommunityIcons color="#FFFFFF" name="camera" size={16} />}
             </TouchableOpacity>
           </View>
-          
           <View style={styles.headerInfo}>
             <Text style={styles.nomeUsuario}>{nome}</Text>
             <Text style={styles.usernameText}>{username}</Text>
@@ -119,57 +184,40 @@ export default function PerfilScreen() {
           </View>
         </View>
 
-        {/* Sobre Mim e Edição */}
         <View style={styles.sobreContainer}>
           <View style={styles.sobreRow}>
             <Text style={styles.sectionTitle}>Sobre Mim</Text>
-            <TouchableOpacity onPress={() => alert('Tela de edição será criada em breve!')} style={styles.btnEditarPerfil}>
+            <TouchableOpacity onPress={abrirModalEdicao} style={styles.btnEditarPerfil}>
               <MaterialCommunityIcons color="#A78BFA" name="pencil" size={14} />
               <Text style={styles.btnEditarTexto}>Editar Perfil</Text>
             </TouchableOpacity>
           </View>
-          
-          <View style={styles.infoBox}>
-            <Text style={styles.infoLabel}>País:</Text>
-            <Text style={styles.infoValor}>{pais}</Text>
-          </View>
-          <View style={styles.infoBox}>
-            <Text style={styles.infoLabel}>Plataformas:</Text>
-            <Text style={styles.infoValor}>{plataformas}</Text>
-          </View>
+          <View style={styles.infoBox}><Text style={styles.infoLabel}>País:</Text><Text style={styles.infoValor}>{pais}</Text></View>
+          <View style={styles.infoBox}><Text style={styles.infoLabel}>Plataformas:</Text><Text style={styles.infoValor}>{plataformas}</Text></View>
         </View>
 
-        {/* Estatísticas */}
         <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Text style={styles.statNumero}>42</Text>
-            <Text style={styles.statLabel}>Jogos</Text>
-          </View>
+          <View style={styles.statBox}><Text style={styles.statNumero}>{totalJogos}</Text><Text style={styles.statLabel}>Jogos</Text></View>
           <View style={styles.statDivider} />
-          <View style={styles.statBox}>
-            <Text style={[styles.statNumero, { color: '#10B981' }]}>8</Text>
-            <Text style={styles.statLabel}>Platinas</Text>
-          </View>
+          <View style={styles.statBox}><Text style={[styles.statNumero, { color: '#10B981' }]}>{totalPlatinas}</Text><Text style={styles.statLabel}>Platinas</Text></View>
         </View>
 
-        {/* Últimas Conquistas */}
-        <Text style={styles.sectionTitle}>Últimas Conquistas</Text>
+        <Text style={styles.sectionTitle}>Últimos Jogos</Text>
         <View style={styles.conquistasContainer}>
-          {ultimasConquistas.map((jogo) => (
+          {ultimasConquistas.length > 0 ? ultimasConquistas.map((jogo) => (
             <View key={jogo.id} style={styles.conquistaCard}>
               <Image source={{ uri: jogo.capa }} style={styles.conquistaCapa} />
               <View style={styles.conquistaInfo}>
                 <Text style={styles.conquistaNomeJogo}>{jogo.nome}</Text>
                 <View style={styles.conquistaBadge}>
-                  <MaterialCommunityIcons color="#F59E0B" name="trophy" size={12} />
-                  <Text style={styles.conquistaTexto}>{jogo.conquista}</Text>
+                  <MaterialCommunityIcons color={jogo.status === 'Platinado' ? '#10B981' : '#7C3AED'} name={jogo.status === 'Platinado' ? 'trophy' : 'controller-classic'} size={12} />
+                  <Text style={[styles.conquistaTexto, {color: jogo.status === 'Platinado' ? '#10B981' : '#7C3AED'}]}>{jogo.status}</Text>
                 </View>
               </View>
             </View>
-          ))}
+          )) : <Text style={{color: '#6B7280'}}>Nenhum jogo iniciado ainda.</Text>}
         </View>
 
-        {/* Botão de Logout */}
         <View style={styles.footerContainer}>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
             <MaterialCommunityIcons color="#EF4444" name="logout" size={18} />
@@ -178,6 +226,35 @@ export default function PerfilScreen() {
         </View>
 
       </ScrollView>
+
+      {/* Modal de Edição de Perfil */}
+      <Modal animationType="fade" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, isWeb && styles.webModalContent]}>
+            <Text style={styles.modalTitle}>Editar Perfil</Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>País</Text>
+              <TextInput style={styles.input} placeholder="Ex: Brasil" placeholderTextColor="#6B7280" value={editPais} onChangeText={setEditPais} />
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Plataformas Favoritas</Text>
+              <TextInput style={styles.input} placeholder="Ex: PS5, PC, Switch" placeholderTextColor="#6B7280" value={editPlataformas} onChangeText={setEditPlataformas} />
+            </View>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.modalBtnCancel} onPress={() => setModalVisible(false)}>
+                <Text style={styles.modalBtnCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalBtnSave} onPress={handleSalvarPerfil} disabled={salvandoPerfil}>
+                {salvandoPerfil ? <ActivityIndicator size="small" color="#FFFFFF" /> : <Text style={styles.modalBtnSaveText}>Salvar</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
@@ -217,5 +294,19 @@ const styles = StyleSheet.create({
   conquistaTexto: { color: '#F59E0B', fontSize: 12, fontWeight: '600', marginLeft: 4 },
   footerContainer: { alignItems: 'flex-start', marginTop: 10 },
   logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 10, borderWidth: 1, borderColor: '#EF4444' },
-  logoutText: { color: '#EF4444', fontSize: 14, fontWeight: 'bold', marginLeft: 8 }
+  logoutText: { color: '#EF4444', fontSize: 14, fontWeight: 'bold', marginLeft: 8 },
+  
+  // Estilos do Modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { width: '100%', backgroundColor: '#151A27', borderRadius: 16, padding: 24, borderWidth: 1, borderColor: '#202638' },
+  webModalContent: { width: '40%', minWidth: 350 },
+  modalTitle: { color: '#FFFFFF', fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
+  inputGroup: { marginBottom: 15 },
+  label: { color: '#D1D5DB', fontSize: 13, fontWeight: '600', marginBottom: 6 },
+  input: { backgroundColor: '#0B0F19', borderWidth: 1, borderColor: '#202638', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 12, color: '#FFFFFF', fontSize: 14 },
+  modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10, gap: 10 },
+  modalBtnCancel: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, backgroundColor: 'transparent' },
+  modalBtnCancelText: { color: '#9CA3AF', fontSize: 14, fontWeight: 'bold' },
+  modalBtnSave: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, backgroundColor: '#7C3AED' },
+  modalBtnSaveText: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold' }
 });

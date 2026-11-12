@@ -12,24 +12,26 @@ Projeto desenvolvido para fins acadêmicos na disciplina de Programação para D
 
 ---
 
-## 🚀 Status Atual do Projeto (Fase de Front-end e API), v. Alpha 0.2.0
-O projeto superou a fase de setup estrutural e agora possui toda a navegação, interfaces principais e consumo de dados reais. Foram implementados:
+## 🚀 Status Atual do Projeto (Versão Final), v. 1.0.0
+O projeto superou a fase de setup estrutural e agora possui toda a navegação, interfaces principais, consumo de dados em tempo real e autenticação em nuvem. Foram implementados:
 
 - **Arquitetura Base e Roteamento:** Migração concluída para **Expo Router** (`app/`).
 - **Navegação Interna (Bottom Tabs):** Estrutura de rotas dividida em abas (Explorar, Biblioteca, Perfil) com bloqueio de retorno para a tela de Login via `router.replace()`.
 - **Identidade Visual (Dark Mode Premium):** Aplicação de paleta focada em fundos escuros (`#0B0F19`), painéis (`#151A27`) e destaques em Roxo Neon (`#7C3AED`). Responsividade Híbrida mantida (Regra 20-60-20 na Web).
-- **Validação Nativa de Cadastro:** Formulário com Regex para força de senha (maiúsculas, minúsculas, números e símbolos), máscaras em tempo real para Data de Nascimento e **Validação Matemática Real de CPF**.
+- **Validação Nativa de Cadastro:** Formulário com Regex para força de senha, máscaras em tempo real para Data de Nascimento e **Validação Matemática Real de CPF**.
 - **Integração IGDB API (Twitch):** A tela "Explorar" realiza autenticação via servidor e consome o catálogo global de jogos da IGDB via *APICalypse*, trazendo os títulos mais aclamados e permitindo busca em tempo real.
-- **Mock de Biblioteca e Perfil:** Interfaces prontas aguardando o Backend. A Biblioteca já conta com barra de progresso gamificada, tags de status (Platinado, Jogando, Desejos) e plataformas. O Perfil exibe as estatísticas do jogador.
+- **Backend as a Service (BaaS):** Integração completa com o **Firebase**. O aplicativo utiliza o *Firebase Auth* para controle de acesso, *Firestore Database* para salvar e carregar os jogos e status da biblioteca em tempo real (onSnapshot), e *Firebase Storage* para upload e exibição dinâmica da foto de perfil do usuário.
 - **Workflow:** Resolução de conflitos de dependência React/React-DOM para suporte Web (`--legacy-peer-deps`) e versionamento seguindo estritamente o padrão **Git Flow** (branches `main`, `develop` e `feature/*`).
 
 ---
 
-## 🛠️ Tecnologias e Bibliotecas Utilizadas até o momento
+## 🛠️ Tecnologias e Bibliotecas Utilizadas
 - React Native & Expo
 - Expo Router (Navegação baseada em arquivos)
 - TypeScript
 - API Externa: **IGDB (Twitch)**
+- Backend: **Firebase (Auth, Firestore e Storage)**
+- Bibliotecas Nativas: `expo-image-picker`
 - Ícones Vetoriais: `@expo/vector-icons`
 - React Native Safe Area Context & Screens
 
